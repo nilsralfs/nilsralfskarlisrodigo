@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Wrapped</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+        .title-screen {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            animation: fadeIn 1.5s ease-in-out;
+        }
+        .start-btn {
+            background-color: #ff0050;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            cursor: pointer;
+            font-size: 24px;
+            margin-top: 20px;
+            transition: transform 0.3s ease-in-out;
+            border-radius: 25px;
+        }
+        .start-btn:hover {
+            transform: scale(1.1);
+        }
+        .about-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #00f2ea;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 25px;
+        }
+        .about-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            width: 50%;
+            text-align: center;
+            border-radius: 15px;
+            
+        }
+        .close-btn {
+            background-color: #ff0050;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 25px;
+        }
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 150px;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+            background: #1c1c1c;
+            border-radius: 10px;
+            overflow: hidden;
+            animation: fadeIn 1s ease-in-out;
+        }
+        th, td {
+            border: 1px solid #ff0050;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background: #ff0050;
+            color: white;
+        }
+        canvas {
+            max-width: 600px;
+            margin: 30px auto;
+            display: block;
+        }
+        .summary {
+        margin-top: 20px;
+        padding: 20px;
+        background: #222;
+        border-radius: 10px;
+        animation: fadeIn 1s ease-in-out;
+        color: white;
+     }
+        #background-video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: -1; /* Nodrošina, ka video paliek fonā */
+        pointer-events: none; /* Atļauj klikšķus cauri video */
+        opacity: 25%;
+    }
+    .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1); /* Pārredzams melns pārklājums */
+    z-index: 0;
+    pointer-events: none; /* Atļauj klikšķus cauri video */
+}
+
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <video autoplay muted loop id="background-video">
+        <source src="background.webm" type="video/webm">
+        Jūsu pārlūkprogramma neatbalsta video elementu.
+    </video>
+    
+    <div class="title-screen">
+        <img src="tiktok_logo.png" alt="TikTok Wrapped Logo" class="logo">
+        <h1>Sveicināts iekš TikTok Wrapped</h1>
+        <button class="start-btn" onclick="startApp()">Aiziet!</button>
+        <button class="about-btn" onclick="toggleAbout()">Par</button>
+    </div>
+    
+    <div class="container">
+        <h1>TikTok Wrapped</h1>
+        <input type="file" id="jsonUpload" accept="application/json">
+        <button onclick="handleFile()">Augšupielādēt JSON</button>
+        <button onclick="exportToCSV()">Lejupielādēt CSV</button>
+
+<script>
+function exportToCSV() {
+    fetch('http://127.0.0.1:5500/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jsonData)  // Nosūta JSON datus Python serverim
+    })
+    .then(response => response.blob())
+    .then(blob => {
+        let url = window.URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'TikTokWrapped.csv';  // Faila nosaukums
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    })
+    .catch(error => console.error('Kļūda:', error));
+}
+</script>
+
+        <canvas id="barChart"></canvas>
+        <canvas id="pieChart"></canvas>
+        
+        <table id="dataTable"></table>
+        
+        
+    </div>
+    
+    <div class="overlay"></div>
+
+    <div class="summary" id="summary"></div>
+
+    <div class="about-modal" id="aboutModal">
+        <h2>Par vietni TikTok Wrapped</h2>
+        <p>Šī vietne ļauj analizēt savus TikTok datus, vizualizēt savus videoklipus ar vislabāko veiktspēju un eksportēt statistiku.
+                                                Lietotni izstrādāja: Nils Obuhovičs, Ralfs Tutiņš, Kārlis Kuģis, Rodrigo Kuzmins.</p>
+        <button class="close-btn" onclick="toggleAbout()">Aizvērt</button>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function startApp() {
+            document.querySelector('.title-screen').style.display = 'none';
+            const container = document.querySelector('.container');
+            container.style.display = 'block';
+            setTimeout(() => {
+                container.style.opacity = '1';
+            }, 10);
+        }
+
+        function toggleAbout() {
+            const aboutModal = document.getElementById('aboutModal');
+            aboutModal.style.display = (aboutModal.style.display === 'block') ? 'none' : 'block';
+        }
+
+        let jsonData = [];
+        function handleFile() {
+    const fileInput = document.getElementById('jsonUpload');
+    const file = fileInput.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        try {
+            const jsonData = JSON.parse(event.target.result);
+            console.log("Dati ielādēti:", jsonData); // Debug logs
+            
+            // Pārliecinies, ka tiek izsauktas VISAS nepieciešamās funkcijas
+            displayTable(jsonData);
+            displayCharts(jsonData);
+            displaySummary(jsonData);
+            
+        } catch (error) {
+            console.error("JSON parsēšanas kļūda:", error);
+        }
+    };
+    reader.readAsText(file);
+}
+
+        function displayCharts(data) {
+            const ctx1 = document.getElementById('barChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: data.map(v => v.VIDEO_NAME),
+                    datasets: [{
+                        label: 'Views',
+                        data: data.map(v => v.VIEWS),
+                        backgroundColor: '#ff0050'
+                    }]
+                }
+            });
+
+            const ctx2 = document.getElementById('pieChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: data.map(v => v.VIDEO_NAME),
+                    datasets: [{
+                        label: 'Likes',
+                        data: data.map(v => v.LIKES),
+                        backgroundColor: ['#ff0050', '#00f2ea', '#fffc00']
+                    }]
+                }
+            });
+        }
+
+        function displayTable(data) {
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '<tr><th>NOSAUKUMS</th><th>SKATIJUMI</th><th>"PATĪK"</th><th>KOMENTĀRI</th><th>REPOST</th></tr>';
+            data.forEach(video => {
+                table.innerHTML += `<tr>
+                    <td>${video.VIDEO_NAME}</td>
+                    <td>${video.VIEWS}</td>
+                    <td>${video.LIKES}</td>
+                    <td>${video.COMMENTS}</td>
+                    <td>${video.REPOSTS}</td>
+                </tr>`;
+            });
+        }
+
+        function displaySummary(data) {
+    if (!data || data.length === 0) return;
+
+    const totalViews = data.reduce((sum, vid) => sum + vid.VIEWS, 0);
+    const totalLikes = data.reduce((sum, vid) => sum + vid.LIKES, 0);
+    const totalComments = data.reduce((sum, vid) => sum + vid.COMMENTS, 0);
+    const mostViewed = data.reduce((prev, curr) => (prev.VIEWS > curr.VIEWS) ? prev : curr);
+
+    document.getElementById('summary').innerHTML = `
+        <h2>Summary</h2>
+        <p><strong>Skatijumi kopumā:</strong> ${totalViews}</p>
+        <p><strong>"Patīk" skaits kopumā"":</strong> ${totalLikes}</p>
+        <p><strong>Komentāru skaits kopumā:</strong> ${totalComments}</p>
+        <p><strong>Vispopulārākais video:</strong> ${mostViewed.VIDEO_NAME} (${mostViewed.VIEWS} views)</p>
+        <p><strong>Vispopulārākais komentārs:</strong> "This is Insane! no one asked bruw."</p>
+    `;
+}
+    </script>
+</body>
+</html>
